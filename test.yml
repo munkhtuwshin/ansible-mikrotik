@@ -7,7 +7,6 @@
       community.routeros.command:
         commands:
           - /system identity print
-          - /log print
           - /export
       register: output
 
