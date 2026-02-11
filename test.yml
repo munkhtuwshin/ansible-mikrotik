@@ -1,0 +1,13 @@
+---
+- name: Test MikroTik
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Get system identity
+      community.routeros.command:
+        commands:
+          - /system identity print
+      register: output
+
+    - debug:
+        var: output.stdout_lines
