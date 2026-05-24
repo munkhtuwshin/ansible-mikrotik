@@ -1,14 +1,17 @@
 ---
-- name: MikroTik Test
-  hosts: all
+- name: Cisco төхөөрөмжөөс running-config backup авах
+  hosts: cisco
   gather_facts: no
-  tasks:
-    - name: Get identity
-      community.routeros.command:
-        commands:
-          - /system identity print
-          - /export
-      register: output
+  connection: network_cli
 
-    - debug:
-        var: output.stdout_lines
+  vars:
+    ansible_network_os: cisco.ios.ios
+    backup_path: ./backup
+
+  tasks:
+    - name: Running-config татах
+      cisco.ios.ios_config:
+        backup: yes
+        backup_options:
+          filename: "{{ inventory_hostname }}-running-config.txt"
+          dir_path: "{{ Desktop }}"
