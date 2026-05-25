@@ -1,17 +1,52 @@
 ---
-- name: Cisco төхөөрөмжөөс running-config backup авах
-  hosts: cisco
-  gather_facts: no
+- name: Cisco Router Configuration Management
+  hosts: all
+  gather_facts: false
   connection: network_cli
 
   vars:
     ansible_network_os: cisco.ios.ios
-    backup_path: ./backup
+    ansible_become: yes
+    ansible_become_method: enable
 
   tasks:
-    - name: Running-config татах
+
+    - name: Show IOS version
+      cisco.ios.ios_command:
+        commands:
+          - show version
+      register: version_output
+
+    - name: Print show version
+      debug:
+        var: version_output.stdout_lines
+
+    - name: Backup running config
+      cisco.ios.ios_command:
+        commands:
+          - show running-config
+      register: running_config
+
+    - name: Save backup to AWX project directory
+      copy:
+        content: "{{ running_config.stdout[0] }}"
+        dest: "/tmp/{{ inventory_hostname }}-backup.cfg"
+
+    - name: Configure hostname and banner
       cisco.ios.ios_config:
+        lines:
+          - banner motd ^CUnauthorized access prohibited^C
+        parents: []
         backup: yes
-        backup_options:
-          filename: "{{ inventory_hostname }}-running-config.txt"
-          dir_path: "{{ Desktop }}"
+
+    - name: Configure interface description
+      cisco.ios.ios_config:
+        parents: interface GigabitEthernet0/0
+        lines:
+          - description Managed-by-AWX
+          - no shutdown
+
+    - name: Save running-config to startup-config
+      cisco.ios.ios_command:
+        commands:
+          - write memory
