@@ -1,0 +1,22 @@
+---
+- name: Show Cisco Running Config
+  hosts: all
+  gather_facts: false
+  connection: network_cli
+
+  vars:
+    ansible_network_os: cisco.ios.ios
+    ansible_become: yes
+    ansible_become_method: enable
+
+  tasks:
+
+    - name: Show running config
+      cisco.ios.ios_command:
+        commands:
+          - show running-config
+      register: output
+
+    - name: Print config
+      debug:
+        var: output.stdout_lines
